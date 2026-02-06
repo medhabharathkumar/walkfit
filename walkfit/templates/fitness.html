@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FitTrack</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- IMPORTANT: Add this in your Django template -->
+<meta name="csrf-token" content="{{ csrf_token }}">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+
+<style>
+:root {
+  --bg: #0b1220;
+  --card: #111827;
+  --primary: #22c55e;
+  --muted: #9ca3af;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: white;
+  font-family: system-ui, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+}
+
+.app {
+  width: 100%;
+  max-width: 360px;
+  background: linear-gradient(180deg, #020617, #020617);
+  border-radius: 24px;
+  padding: 20px;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+}
+
+.header { text-align: center; margin-bottom: 20px; }
+.header h1 { margin: 0; font-size: 22px; }
+.header p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+
+.controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+button {
+  border: none;
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.btn-start { background: var(--primary); color: black; }
+.btn-start:hover { background: #16a34a; transform: scale(1.02); }
+
+.btn-stop { background: #ef4444; color: white; }
+.btn-stop:hover { background: #dc2626; transform: scale(1.02); }
+
+.btn-reset { background: #f59e0b; color: black; width: 100%; }
+.btn-reset:hover { background: #d97706; transform: scale(1.02); }
+
+.timer { text-align: center; margin-bottom: 20px; }
+.timer h2 { margin: 0; font-size: 28px; color: var(--primary); font-family: monospace; }
+
+.dashboard {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.card {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 14px;
+  text-align: center;
+  transition: transform 0.2s;
+}
+
+.card:hover { transform: translateY(-3px); }
+
+.card h3 { margin: 0; font-size: 12px; color: var(--muted); }
+.card p { margin: 6px 0 0; font-size: 18px; font-weight: bold; }
+
+.icon { font-size: 20px; color: var(--primary); margin-bottom: 6px; display: block; }
+
+.footer {
+  margin-top: 16px;
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <i class="fas fa-heartbeat icon" style="font-size:32px;"></i>
+    <h1>FitTrack</h1>
+    <p>Web Fitness Monitor</p>
+  </div>
+
+  <div class="timer">
+    <h2 id="timer">00:00:00</h2>
+  </div>
+
+  <div class="controls">
+    <button class="btn-start" onclick="startTracking()">
+      <i class="fas fa-play"></i> Start
+    </button>
+    <button class="btn-stop" onclick="stopTracking()" disabled>
+      <i class="fas fa-stop"></i> Stop
+    </button>
+  </div>
+
+  <div style="margin-bottom:20px;">
+    <button class="btn-reset" onclick="resetTracking()">
+      <i class="fas fa-redo"></i> Reset Data
+    </button>
+  </div>
+
+  <div class="dashboard">
+    <div class="card">
+      <i class="fas fa-route icon"></i>
+      <h3>Distance</h3>
+      <p id="distance">0.00 km</p>
+    </div>
+    <div class="card">
+      <i class="fas fa-tachometer-alt icon"></i>
+      <h3>Speed</h3>
+      <p id="speed">0.0 m/s</p>
+    </div>
+    <div class="card">
+      <i class="fas fa-shoe-prints icon"></i>
+      <h3>Steps</h3>
+      <p id="steps">0</p>
+    </div>
+    <div class="card">
+      <i class="fas fa-fire icon"></i>
+      <h3>Calories</h3>
+      <p id="calories">0 kcal</p>
+    </div>
+    <div class="card">
+      <i class="fas fa-running icon"></i>
+      <h3>Activity</h3>
+      <p id="activity">Idle</p>
+    </div>
+  </div>
+
+  <div class="footer">
+    Estimates from sensors • Saved periodically
+  </div>
+</div>
+
+<script>
+let lastPosition = null;
+let totalDistance = 0;
+let totalSteps = 0;
+let startTime = null;
+let timerInterval = null;
+let autoSaveInterval = null;
+let tracking = false;
+let lastStepTime = 0;
+let currentSpeed = 0;
+
+window.onload = () => {
+  const saved = localStorage.getItem('fitTrackData');
+  if (saved) {
+    const d = JSON.parse(saved);
+    totalDistance = d.distance || 0;
+    totalSteps = d.steps || 0;
+    updateDisplay();
+  }
+};
+
+function getCsrfToken() {
+  const meta = document.querySelector('meta[name="csrf-token"]');
+  return meta ? meta.content : '';
+}
+
+function startTracking() {
+  if (tracking) return;
+
+  requestLocationPermission()
+    .then(requestMotionPermission)
+    .then(() => {
+      tracking = true;
+      startTime = Date.now();
+      startTimer();
+      document.querySelector('.btn-start').disabled = true;
+      document.querySelector('.btn-stop').disabled = false;
+      autoSaveInterval = setInterval(saveToServer, 30000);
+    })
+    .catch(err => alert("Permissions needed:\n" + err.message));
+}
+
+function stopTracking() {
+  if (!tracking) return;
+  tracking = false;
+  clearInterval(timerInterval);
+  if (autoSaveInterval) clearInterval(autoSaveInterval);
+  saveData();       // local
+  saveToServer();   // final server save
+  document.querySelector('.btn-start').disabled = false;
+  document.querySelector('.btn-stop').disabled = true;
+}
+
+function requestLocationPermission() {
+  return new Promise((res, rej) => {
+    if (!navigator.geolocation) return rej("Geolocation unavailable");
+    navigator.geolocation.watchPosition(updateLocation, e => rej(e.message), {
+      enableHighAccuracy: true, maximumAge: 1000, timeout: 10000
+    });
+    res();
+  });
+}
+
+function requestMotionPermission() {
+  return new Promise((res, rej) => {
+    if (!DeviceMotionEvent) return rej("Device motion unavailable");
+    if (typeof DeviceMotionEvent.requestPermission === 'function') {
+      DeviceMotionEvent.requestPermission().then(perm => {
+        if (perm === 'granted') { enableMotion(); res(); }
+        else rej("Motion permission denied");
+      });
+    } else {
+      enableMotion();
+      res();
+    }
+  });
+}
+
+function enableMotion() {
+  window.addEventListener("devicemotion", e => {
+    if (!tracking) return;
+    const acc = e.accelerationIncludingGravity;
+    const intensity = Math.abs(acc.x||0) + Math.abs(acc.y||0) + Math.abs(acc.z||0);
+
+    let state = "Idle";
+    if (intensity > 25) state = "High";
+    else if (intensity > 15) state = "Moderate";
+    else if (intensity > 8) state = "Light";
+    document.getElementById("activity").textContent = state;
+
+    const now = Date.now();
+    if (intensity > 15 && now - lastStepTime > 300) {
+      totalSteps++;
+      lastStepTime = now;
+      updateDisplay();
+    }
+  });
+}
+
+function updateLocation(pos) {
+  if (!tracking) return;
+  const { latitude, longitude, speed } = pos.coords;
+  currentSpeed = speed ?? 0;
+
+  if (lastPosition) {
+    totalDistance += calculateDistance(
+      lastPosition.lat, lastPosition.lon, latitude, longitude
+    );
+  }
+  lastPosition = { lat: latitude, lon: longitude };
+  updateDisplay();
+}
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    const t = Date.now() - startTime;
+    const h = Math.floor(t / 3600000).toString().padStart(2,'0');
+    const m = Math.floor((t % 3600000)/60000).toString().padStart(2,'0');
+    const s = Math.floor((t % 60000)/1000).toString().padStart(2,'0');
+    document.getElementById("timer").textContent = `${h}:${m}:${s}`;
+  }, 1000);
+}
+
+function updateDisplay() {
+  document.getElementById("distance").textContent = (totalDistance / 1000).toFixed(2) + " km";
+  document.getElementById("speed").textContent = currentSpeed.toFixed(1) + " m/s";
+  document.getElementById("steps").textContent = totalSteps;
+  const cal = Math.round((totalDistance / 1000) * 60 + totalSteps * 0.04);
+  document.getElementById("calories").textContent = cal + " kcal";
+}
+
+function saveData() {
+  localStorage.setItem('fitTrackData', JSON.stringify({
+    distance: totalDistance,
+    steps: totalSteps
+  }));
+}
+
+function saveToServer() {
+  const cal = Math.round((totalDistance / 1000) * 60 + totalSteps * 0.04);
+  fetch('/fitness_tracker/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCsrfToken()
+    },
+    body: JSON.stringify({
+      distance: totalDistance / 1000,
+      steps: totalSteps,
+      calories: cal
+    }),
+    credentials: 'same-origin'
+  }).catch(err => console.warn("Server save failed:", err));
+}
+
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371e3;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function resetTracking() {
+  if (!confirm("Reset all data?")) return;
+  if (tracking) stopTracking();
+  lastPosition = null;
+  totalDistance = totalSteps = currentSpeed = 0;
+  localStorage.removeItem('fitTrackData');
+  document.getElementById("timer").textContent = "00:00:00";
+  updateDisplay();
+}
+</script>
+</body>
+</html>

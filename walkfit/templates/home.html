@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FitTrack Pro - Science-Based Fitness & Lifelong Health</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+</head>
+<body class="bg-gray-950 text-gray-100 font-sans antialiased">
+
+  <!-- Navbar -->
+  <nav class="fixed top-0 left-0 right-0 z-50 bg-gray-900/90 backdrop-blur-md shadow-lg border-b border-gray-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16 sm:h-20">
+        <div class="flex items-center gap-3">
+          <i class="fa-solid fa-dumbbell text-2xl sm:text-3xl text-indigo-400"></i>
+          <a href="/" class="text-xl sm:text-2xl font-bold text-white">
+            FitTrack<span class="text-indigo-400">Pro</span>
+          </a>
+        </div>
+
+        <div class="hidden md:flex items-center gap-5 lg:gap-10 text-sm lg:text-base">
+          <a href="/listvideo/" class="hover:text-indigo-400 transition">PlayFit</a>
+          <a href="/fitness_tracker/" class="hover:text-indigo-400 transition">Track</a>
+          <a href="/feedback/" class="hover:text-indigo-400 transition">Feedback</a>
+          <a href="#science" class="hover:text-indigo-400 transition">Science Behind</a>
+          <a href="#journey" class="hover:text-indigo-400 transition">Your Journey</a>
+          <a href="{% url 'manage_reminder' %}" class="hover:text-indigo-400 transition flex items-center gap-1">
+            <i class="fas fa-bell"></i> Reminders
+          </a>
+        </div>
+
+        <div class="hidden md:flex items-center gap-5">
+          <a href="/logout/" class="text-gray-300 hover:text-indigo-400 px-5 py-2.5 rounded-lg hover:bg-gray-800 transition">
+            Logout
+          </a>
+          <a href="/profile/" class="bg-indigo-600 hover:bg-indigo-700 text-white px-7 py-3 rounded-xl font-medium shadow-md hover:scale-105 transition">
+            My Account
+          </a>
+        </div>
+
+        <button class="md:hidden text-2xl text-gray-300" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile menu -->
+    <div id="mobile-menu" class="hidden md:hidden absolute top-16 left-0 right-0 bg-gray-900 border-b border-gray-800 py-6 px-6">
+      <div class="flex flex-col gap-6 text-base">
+        <a href="/listvideo/" class="hover:text-indigo-400">PlayFit</a>
+        <a href="/fitness_tracker/" class="hover:text-indigo-400">Track</a>
+        <a href="#features" class="hover:text-indigo-400">Features</a>
+        <a href="#science" class="hover:text-indigo-400">Science Behind</a>
+        <a href="#journey" class="hover:text-indigo-400">Your Journey</a>
+        <a href="{% url 'manage_reminder' %}" class="hover:text-indigo-400 flex items-center gap-2">
+          <i class="fas fa-bell"></i> Reminders
+        </a>
+        <hr class="border-gray-700 my-2">
+        <a href="/logout/" class="hover:text-indigo-400">Logout</a>
+        <a href="/profile/" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl text-center">
+          My Account
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Spacer -->
+  <div class="h-16 sm:h-20"></div>
+
+  <!-- Messages toast -->
+  {% if messages %}
+  <div class="fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-indigo-900/95 text-white border border-indigo-400 rounded-xl shadow-2xl px-6 py-5 max-w-lg w-[90vw] flex items-center justify-between gap-4 animate-fade-in">
+    <div class="flex items-center gap-4">
+      <i class="fas fa-bell text-3xl text-yellow-300"></i>
+      {% for message in messages %}
+        <p class="text-lg font-medium">{{ message }}</p>
+      {% endfor %}
+    </div>
+    <button onclick="this.parentElement.remove()" class="text-white hover:text-gray-200 text-2xl font-bold">×</button>
+  </div>
+  {% endif %}
+
+  <!-- HERO -->
+  <section class="min-h-screen pt-20 sm:pt-32 pb-16 sm:pb-24 flex items-center bg-gradient-to-br from-gray-900 via-indigo-950 to-purple-950">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8 w-full">
+      <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+        <div class="space-y-8 sm:space-y-10 text-center lg:text-left">
+          <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-tight">
+            Build a <span class="text-indigo-400">Stronger,</span><br>
+            <span class="text-indigo-400">Healthier</span> You<br>
+            <span class="text-3xl sm:text-4xl md:text-5xl">for Life</span>
+          </h1>
+
+          <p class="text-lg sm:text-xl md:text-2xl text-gray-300 leading-relaxed max-w-3xl mx-auto lg:mx-0">
+            Not just another workout app.<br>A complete system that helps you understand your body, build sustainable habits, and create lasting health.
+          </p>
+
+          <div class="flex flex-wrap justify-center lg:justify-start gap-5 sm:gap-6">
+            <a href="/register" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 sm:px-10 py-5 sm:py-6 rounded-xl text-lg sm:text-xl font-bold shadow-xl hover:scale-105 transition-all">
+              Begin Your Transformation
+            </a>
+            <a href="#science" class="border-2 border-indigo-400 text-indigo-400 hover:bg-indigo-950/50 px-8 sm:px-10 py-5 sm:py-6 rounded-xl text-lg sm:text-xl font-bold transition-all">
+              See The Science →
+            </a>
+          </div>
+
+          <div class="flex flex-wrap justify-center lg:justify-start gap-6 sm:gap-10 pt-4 sm:pt-6 text-gray-300 text-sm sm:text-base">
+            <div class="flex items-center gap-2 sm:gap-3">
+              <i class="fa-solid fa-shield-halved text-emerald-400 text-xl sm:text-2xl"></i>
+              <span>100% Science-Backed</span>
+            </div>
+            <div class="flex items-center gap-2 sm:gap-3">
+              <i class="fa-solid fa-infinity text-emerald-400 text-xl sm:text-2xl"></i>
+              <span>Sustainable for Life</span>
+            </div>
+            <div class="flex items-center gap-2 sm:gap-3">
+              <i class="fa-solid fa-heart text-pink-400 text-xl sm:text-2xl"></i>
+              <span>Body + Mind Focus</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="relative mt-10 lg:mt-0">
+          <img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1740&q=80" 
+               class="rounded-3xl shadow-2xl object-cover h-80 sm:h-96 md:h-[500px] lg:h-[720px] w-full max-w-xl mx-auto brightness-75 contrast-125" 
+               alt="Strong healthy person">
+          <div class="absolute -bottom-8 sm:-bottom-10 left-1/2 sm:-left-10 -translate-x-1/2 sm:translate-x-0 bg-gray-900/80 backdrop-blur p-6 sm:p-8 rounded-2xl shadow-2xl border border-gray-700 text-center sm:text-left">
+            <div class="text-4xl sm:text-5xl font-black text-indigo-400">+87%</div>
+            <div class="text-base sm:text-lg mt-1 text-gray-300">Average strength increase<br>after 12 months</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY FITNESS REALLY MATTERS -->
+  <section id="why-fitness" class="py-16 sm:py-24 bg-gray-900">
+    <div class="max-w-6xl mx-auto px-6 lg:px-8">
+      <div class="text-center mb-12 sm:mb-20">
+        <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 sm:mb-6">
+          Why Fitness & Health Should Be Your Top Priority
+        </h2>
+        <p class="text-lg sm:text-xl text-gray-300 max-w-4xl mx-auto">
+          In 2026 we have more knowledge about human health than ever before — yet lifestyle diseases are still rising dramatically.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-10">
+        <div class="bg-gradient-to-br from-indigo-950 to-blue-950 p-6 sm:p-10 rounded-2xl shadow-lg hover:shadow-xl transition-all group border border-indigo-800/50">
+          <div class="text-indigo-400 text-5xl sm:text-6xl mb-6 sm:mb-8"><i class="fa-solid fa-heart-pulse"></i></div>
+          <h3 class="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-5">Live Longer & Better</h3>
+          <p class="text-gray-300 text-sm sm:text-base leading-relaxed">
+            Regular strength training + cardio can add 5–7 healthy years to your life according to large-scale longitudinal studies (2023–2025).
+          </p>
+        </div>
+
+        <div class="bg-gradient-to-br from-emerald-950 to-teal-950 p-6 sm:p-10 rounded-2xl shadow-lg hover:shadow-xl transition-all group border border-emerald-800/50">
+          <div class="text-emerald-400 text-5xl sm:text-6xl mb-6 sm:mb-8"><i class="fa-solid fa-brain"></i></div>
+          <h3 class="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-5">Mental Health Superpower</h3>
+          <p class="text-gray-300 text-sm sm:text-base leading-relaxed">
+            Exercise is now considered a first-line treatment for mild-moderate depression & anxiety — comparable to medication in many studies.
+          </p>
+        </div>
+
+        <div class="bg-gradient-to-br from-amber-950 to-orange-950 p-6 sm:p-10 rounded-2xl shadow-lg hover:shadow-xl transition-all group border border-amber-800/50">
+          <div class="text-amber-400 text-5xl sm:text-6xl mb-6 sm:mb-8"><i class="fa-solid fa-shield-virus"></i></div>
+          <h3 class="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-5">Strong Immune System</h3>
+          <p class="text-gray-300 text-sm sm:text-base leading-relaxed">
+            Consistent moderate exercise reduces risk of severe outcomes from respiratory infections by 30–50% (meta-analysis 2024).
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCIENCE BEHIND REAL RESULTS -->
+  <section id="science" class="py-16 sm:py-24 bg-gray-950">
+    <div class="max-w-6xl mx-auto px-6 lg:px-8">
+      <div class="text-center mb-12 sm:mb-20">
+        <h2 class="text-4xl sm:text-5xl font-bold text-white mb-4 sm:mb-6">The Science That Actually Works</h2>
+        <p class="text-lg sm:text-xl text-gray-300 max-w-4xl mx-auto">
+          We don't follow trends. We follow evidence from high-quality research (2020–2026).
+        </p>
+      </div>
+
+      <div class="space-y-16 sm:space-y-24">
+        <div class="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+          <div>
+            <h3 class="text-3xl sm:text-4xl font-bold text-white mb-6 sm:mb-8">Progressive Overload — The #1 Driver</h3>
+            <div class="space-y-4 sm:space-y-6 text-base sm:text-lg text-gray-300">
+              <p><strong>Most important principle</strong> for building muscle and strength</p>
+              <ul class="space-y-3 sm:space-y-4">
+                <li class="flex items-start gap-3 sm:gap-4"><i class="fa-solid fa-check-circle text-emerald-400 mt-1 text-lg sm:text-xl"></i><span>Gradually increase weight / reps / difficulty over weeks & months</span></li>
+                <li class="flex items-start gap-3 sm:gap-4"><i class="fa-solid fa-check-circle text-emerald-400 mt-1 text-lg sm:text-xl"></i><span>Most effective range: 6–20 reps per set (recent 2024 meta-analysis)</span></li>
+                <li class="flex items-start gap-3 sm:gap-4"><i class="fa-solid fa-check-circle text-emerald-400 mt-1 text-lg sm:text-xl"></i><span>Best results from training close to failure (0–3 RIR)</span></li>
+              </ul>
+            </div>
+          </div>
+          <div class="rounded-3xl overflow-hidden shadow-2xl border border-gray-700">
+            <img src="https://i.pinimg.com/736x/16/4c/ee/164ceeaa80ce32538827b505c49b948a.jpg" alt="Progressive overload progression chart" class="w-full">
+          </div>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center lg:flex-row-reverse">
+          <div>
+            <h3 class="text-3xl sm:text-4xl font-bold text-white mb-6 sm:mb-8">Nutrition: The Real Game Changer</h3>
+            <div class="space-y-4 sm:space-y-6 text-base sm:text-lg text-gray-300">
+              <p>Training creates the stimulus — <strong>nutrition builds the result</strong></p>
+              <ul class="space-y-3 sm:space-y-4">
+                <li class="flex items-start gap-3 sm:gap-4"><i class="fa-solid fa-check-circle text-emerald-400 mt-1 text-lg sm:text-xl"></i><span>Protein: 1.6–2.2g/kg ideal for most people</span></li>
+                <li class="flex items-start gap-3 sm:gap-4"><i class="fa-solid fa-check-circle text-emerald-400 mt-1 text-lg sm:text-xl"></i><span>Calorie deficit 300–500 kcal/day = sustainable fat loss</span></li>
+                <li class="flex items-start gap-3 sm:gap-4"><i class="fa-solid fa-check-circle text-emerald-400 mt-1 text-lg sm:text-xl"></i><span>Sleep 7–9h + stress management = 2–3× better results</span></li>
+              </ul>
+            </div>
+          </div>
+          <div class="rounded-3xl overflow-hidden shadow-2xl border border-gray-700">
+            <img src="https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=1200&q=80" alt="Balanced healthy nutrition plate" class="w-full">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features" class="py-16 sm:py-24 bg-gray-900">
+    <div class="max-w-7xl mx-auto px-6">
+      <h2 class="text-4xl sm:text-5xl font-bold text-white text-center mb-10 sm:mb-16">Powerful Tools For Real Results</h2>
+      <div class="text-center text-gray-300 text-lg sm:text-xl">Feature carousel coming soon...</div>
+    </div>
+  </section>
+
+  <!-- YOUR TRANSFORMATION JOURNEY -->
+  <section id="journey" class="py-16 sm:py-24 bg-gradient-to-b from-gray-950 to-gray-900">
+    <div class="max-w-6xl mx-auto px-6 text-center">
+      <h2 class="text-4xl sm:text-5xl font-bold text-white mb-6 sm:mb-8">Your Realistic Transformation Timeline</h2>
+      <p class="text-lg sm:text-xl text-gray-300 mb-10 sm:mb-16 max-w-4xl mx-auto">
+        Honest expectations based on thousands of real user journeys (2023–2026 data)
+      </p>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+        <div class="bg-gray-800 p-6 sm:p-10 rounded-2xl shadow-lg border border-gray-700">
+          <div class="text-4xl sm:text-5xl font-black text-indigo-400 mb-4 sm:mb-6">0–4</div>
+          <h4 class="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">Weeks</h4>
+          <p class="text-gray-300 text-sm sm:text-base">Better energy • Improved mood • Noticeable sleep quality • First strength gains</p>
+        </div>
+
+        <div class="bg-gray-800 p-6 sm:p-10 rounded-2xl shadow-lg border border-gray-700">
+          <div class="text-4xl sm:text-5xl font-black text-indigo-400 mb-4 sm:mb-6">1–3</div>
+          <h4 class="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">Months</h4>
+          <p class="text-gray-300 text-sm sm:text-base">Visible body recomposition • 5–15% strength increase • Much better recovery</p>
+        </div>
+
+        <div class="bg-gray-800 p-6 sm:p-10 rounded-2xl shadow-lg border border-gray-700">
+          <div class="text-4xl sm:text-5xl font-black text-indigo-400 mb-4 sm:mb-6">6–12</div>
+          <h4 class="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">Months</h4>
+          <p class="text-gray-300 text-sm sm:text-base">Dramatic physique change • 30–80% strength increase • New lifestyle habits</p>
+        </div>
+
+        <div class="bg-gray-800 p-6 sm:p-10 rounded-2xl shadow-lg border border-gray-700">
+          <div class="text-4xl sm:text-5xl font-black text-indigo-400 mb-4 sm:mb-6">12+</div>
+          <h4 class="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">Months</h4>
+          <p class="text-gray-300 text-sm sm:text-base">Complete lifestyle transformation • New identity • Long-term health protection</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section class="py-20 sm:py-32 bg-gradient-to-br from-indigo-950 to-blue-950 text-white">
+    <div class="max-w-5xl mx-auto px-6 text-center">
+      <h2 class="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 sm:mb-10">
+        Ready to Become<br>The Strongest Version of Yourself?
+      </h2>
+      <p class="text-lg sm:text-2xl mb-10 sm:mb-16 opacity-90 max-w-3xl mx-auto">
+        Start today — no complicated diets, no extreme workouts,<br>just smart, sustainable, science-based progress.
+      </p>
+      <a href="/spotify" class="inline-block bg-white text-indigo-900 hover:bg-gray-100 px-10 sm:px-16 py-6 sm:py-8 rounded-2xl text-xl sm:text-2xl font-bold shadow-2xl transform hover:scale-105 transition-all">
+        <i class="fas fa-music"></i> Listen to Workout Tracks Now →
+      </a>
+      <p class="mt-8 sm:mt-12 text-indigo-300 text-base sm:text-lg">
+        No credit card • Cancel anytime • Real results or your time back
+      </p>
+    </div>
+    
+  </section>
+<script>
+  let remindTime = null;
+  let alertedThisMinute = false;
+
+  const messages = [
+    "Hey 💕 Time to drink some water! 🌊",
+    "Mini stretch or dance break! 💃",
+    "Healthy food moment 🍓🥑",
+    "Water + movement + good vibes 💖",
+    "Quick reminder: hydrate & move! 💧🏃‍♀️",
+    "Time for a healthy snack break! 🥗",
+    "You got this! Small step now = big win later 🌟"
+  ];
+
+  fetch('/get_daily_reminder/', { credentials: 'same-origin' })
+    .then(r => r.json())
+    .then(data => {
+      if (data.enabled && data.remind_time) {
+        remindTime = data.remind_time;
+        startCheck();
+      }
+    });
+
+  function startCheck() {
+    checkReminder();
+    setInterval(checkReminder, 15000);
+  }
+
+  function checkReminder() {
+    if (!remindTime) return;
+
+    const now = new Date();
+    const currentMinute = now.getHours() * 60 + now.getMinutes();
+
+    const [targetH, targetM] = remindTime.split(':').map(Number);
+    const targetMinute = targetH * 60 + targetM;
+
+    if (currentMinute === targetMinute) {
+      if (!alertedThisMinute) {
+        const randomMsg = messages[Math.floor(Math.random() * messages.length)];
+        alert("Reminder 💕\n" + randomMsg);
+        alertedThisMinute = true;
+      }
+    } else {
+      alertedThisMinute = false;
+    }
+  }
+</script>
+  <!-- GSAP -->
+  <script>
+    gsap.registerPlugin(ScrollTrigger);
+    gsap.from("h1", {y:120, opacity:0, duration:1.4, ease:"power3.out"});
+    gsap.utils.toArray("section h2").forEach(title => {
+      gsap.from(title, {scrollTrigger: {trigger: title, start: "top 80%"}, y: 100, opacity: 0, duration: 1.2, ease: "power3.out"});
+    });
+  </script>
+<div id="floating-chat" onclick="window.location.href='/chatbot/'">
+  <img src="https://cdn3d.iconscout.com/3d/premium/thumb/orange-robot-lifting-weights-3d-icon-png-download-10975515.png" alt="WalkFit">
+  Talk to WalkFit
+</div>
+
+<style>
+  #floating-chat {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: #ff9500;
+    color: #000;
+    padding: 12px 20px;
+    border-radius: 50px;
+    font-weight: bold;
+    box-shadow: 0 6px 20px rgba(255,149,0,0.5);
+    cursor: pointer;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s;
+  }
+  #floating-chat img {
+    width: 38px;
+    height: 38px;
+  }
+  #floating-chat:hover {
+    transform: scale(1.1);
+    box-shadow: 0 10px 30px rgba(255,149,0,0.7);
+  }
+</style>
+</body>
+</html>

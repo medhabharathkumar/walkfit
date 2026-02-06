@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Feedback List</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#2563eb',
+            primarydark: '#1d4ed8',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    .star-filled { color: #fbbf24; }
+    .star-empty  { color: #4b5563; }
+  </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen antialiased">
+
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-6">
+      <h1 class="text-3xl sm:text-4xl font-bold tracking-tight">Class Feedback</h1>
+      <!-- <a href="/" 
+         class="bg-primary hover:bg-primarydark px-6 py-3 rounded-xl font-medium transition shadow-md">
+        ← Submit New Feedback
+      </a> -->
+    </div>
+
+    <!-- Success Messages -->
+    {% if messages %}
+      <div class="mb-8 space-y-4">
+        {% for message in messages %}
+          <div class="p-4 bg-green-900/40 border border-green-700 rounded-xl text-green-300">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- Delete Confirmation (shown only when confirming deletion) -->
+    {% if feedback %}
+      <div class="mb-12 bg-gray-900 rounded-2xl border border-red-800/50 p-6 md:p-8 shadow-2xl">
+        <h2 class="text-2xl font-bold text-red-400 mb-5">Confirm Deletion</h2>
+        
+        <div class="space-y-3 mb-6">
+          <p class="text-lg">
+            <span class="font-semibold text-white">{{ feedback.name }}</span>
+            <span class="ml-2 text-yellow-400">{{ feedback.rating }}★</span>
+          </p>
+          <p class="text-gray-300 line-clamp-4">{{ feedback.message }}</p>
+          <p class="text-sm text-gray-500">
+            Submitted: {{ feedback.created_at|date:"d M Y • H:i" }}
+          </p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4">
+          <form method="post" action="{% url 'feedback_delete' feedback.id %}" class="flex-1">
+            {% csrf_token %}
+            <button type="submit"
+                    class="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 
+                           text-white font-semibold py-4 rounded-xl transition shadow-lg">
+              Yes, Delete Permanently
+            </button>
+          </form>
+          <a href="{% url 'feedback_list' %}"
+             class="flex-1 bg-gray-700 hover:bg-gray-600 text-center font-semibold py-4 rounded-xl transition">
+            Cancel
+          </a>
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Feedback List -->
+    {% if feedbacks %}
+      <div class="bg-gray-900 rounded-2xl border border-gray-800 shadow-2xl overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left min-w-max">
+            <thead class="bg-gray-800">
+              <tr>
+                <th class="px-6 py-4 font-semibold">Name</th>
+                <th class="px-6 py-4 font-semibold text-center">Rating</th>
+                <th class="px-6 py-4 font-semibold">Message</th>
+                <th class="px-6 py-4 font-semibold text-center">Date</th>
+                <th class="px-6 py-4 font-semibold text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-800">
+              {% for fb in feedbacks %}
+              <tr class="hover:bg-gray-800/60 transition-colors">
+                <td class="px-6 py-5 font-medium">{{ fb.name }}</td>
+                
+                <td class="px-6 py-5 text-center">
+                  <div class="flex items-center justify-center gap-0.5 text-2xl">
+                    {% for i in "12345" %}
+                      <span class="{% if forloop.counter <= fb.rating %}star-filled{% else %}star-empty{% endif %}">
+                        ★
+                      </span>
+                    {% endfor %}
+                  </div>
+                  <div class="text-xs text-gray-500 mt-1">({{ fb.rating }}/5)</div>
+                </td>
+                
+                <td class="px-6 py-5 max-w-xl">
+                  <div class="line-clamp-2">{{ fb.message }}</div>
+                </td>
+                
+                <td class="px-6 py-5 text-center text-sm text-gray-400 whitespace-nowrap">
+                  {{ fb.created_at|date:"d M Y • H:i" }}
+                </td>
+                
+                <td class="px-6 py-5 text-center">
+                  <a href="?delete={{ fb.id }}"
+                     class="text-red-400 hover:text-red-300 font-medium transition">
+                    Delete
+                  </a>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="5" class="py-12 text-center text-gray-400 text-lg">
+                  No feedback entries yet.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% else %}
+      <div class="text-center py-16 text-gray-400 text-xl">
+        No feedback has been submitted yet.
+      </div>
+    {% endif %}
+
+  </div>
+
+</body>
+</html>

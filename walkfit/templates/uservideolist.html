@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FitTube - Videos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .card:hover img {
+      transform: scale(1.06);
+    }
+    #modal {
+      display: none;
+    }
+    #searchInput:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.3);
+    }
+  </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen font-sans">
+
+<header class="bg-gray-900 border-b border-gray-800 sticky top-0 z-20 shadow-md">
+  <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <h1 class="text-2xl font-bold tracking-tight">
+      <span class="text-red-600">Fit</span>Tube
+    </h1>
+    <div class="flex flex-wrap gap-3 items-center w-full sm:w-auto">
+      <input 
+        type="text" 
+        id="searchInput" 
+        placeholder="Search title or description..." 
+        class="flex-1 sm:min-w-[240px] px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 transition"
+      >
+      <div class="flex gap-2 flex-wrap">
+        <button class="filter-btn px-4 py-1.5 bg-gray-700 hover:bg-gray-600 rounded font-medium active bg-indigo-700" data-filter="all">All</button>
+        <button class="filter-btn px-4 py-1.5 bg-gray-700 hover:bg-gray-600 rounded font-medium" data-filter="male">Male</button>
+        <button class="filter-btn px-4 py-1.5 bg-gray-700 hover:bg-gray-600 rounded font-medium" data-filter="female">Female</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-4 py-8">
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="videolist">
+
+    {% for video in videos %}
+    <div class="card bg-gray-800 rounded-xl overflow-hidden cursor-pointer shadow-lg shadow-black/30 video-card transition-all hover:shadow-xl"
+         data-video-url="{{ video.video.url }}"
+         data-title="{{ video.title|escape|lower }}"
+         data-description="{{ video.description|escape|lower|default:'' }}"
+         data-full-title="{{ video.title|escape }}">
+      <div class="relative">
+        {% if video.thumbnail %}
+          <img src="{{ video.thumbnail.url }}"
+               alt="{{ video.title|escape }}"
+               class="w-full aspect-video object-cover transition-transform duration-300">
+        {% else %}
+          <div class="w-full aspect-video bg-gray-700 flex items-center justify-center text-gray-500 text-sm font-medium">
+            No thumbnail
+          </div>
+        {% endif %}
+        <div class="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-0.5 rounded font-medium">--:--</div>
+      </div>
+      <div class="p-4">
+        <h3 class="font-medium line-clamp-2 text-base mb-1">{{ video.title }}</h3>
+        <p class="text-xs text-gray-500">{{ video.created_at|timesince }} ago</p>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-span-full text-center py-20 text-gray-400">
+      <p class="text-2xl mb-3">No videos yet</p>
+      <p>Upload your first fitness video to get started!</p>
+    </div>
+    {% endfor %}
+
+  </div>
+
+</main>
+
+<!-- Compact popup player -->
+<div id="modal" class="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4">
+  <div class="bg-gray-900 rounded-2xl overflow-hidden w-full max-w-lg shadow-2xl relative border border-gray-800">
+    <button id="close" class="absolute top-3 right-4 text-gray-400 hover:text-white text-4xl font-bold z-10 transition-colors">&times;</button>
+    <video id="player" class="w-full aspect-video bg-black" controls>
+      <source id="source" src="" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+    <div class="p-4">
+      <h2 id="modaltitle" class="text-lg font-medium line-clamp-2"></h2>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+  const searchInput   = document.getElementById('searchInput');
+  const genderButtons = document.querySelectorAll('.filter-btn');
+  const cards         = document.querySelectorAll('.video-card');
+
+  let currentGenderFilter = 'all';
+
+  // Keywords — made stricter & more specific
+  const femaleKeywords = [
+    'woman', 'women', 'female', 'girls', 'girl', 'ladies', 'lady', 'womens', "women's",
+    'mom', 'moms', 'pregnancy', 'postpartum', 'prenatal', 'post natal',
+    'booty', 'glutes', 'curves', 'female fitness', 'women workout', 'girls workout'
+  ];
+
+  const maleKeywords = [
+    'man', 'men', 'male', 'guys', 'guy', 'mens', "men's", 'bro', 'bros',
+    'bulk', 'bulking', 'mass gain', 'heavy lifting', 'powerlifting', 'deadlift', 'bench press',
+    'male fitness', 'mens workout', 'men workout', 'guys workout'
+  ];
+
+  function detectGender(titleLower, descLower) {
+    // Title check first (strongest signal)
+    if (femaleKeywords.some(kw => titleLower.includes(kw)) && 
+        !maleKeywords.some(kw => titleLower.includes(kw))) {
+      return 'female';
+    }
+    if (maleKeywords.some(kw => titleLower.includes(kw)) && 
+        !femaleKeywords.some(kw => titleLower.includes(kw))) {
+      return 'male';
+    }
+
+    // Only if title is neutral → check description
+    if (femaleKeywords.some(kw => descLower.includes(kw)) && 
+        !maleKeywords.some(kw => descLower.includes(kw))) {
+      return 'female';
+    }
+    if (maleKeywords.some(kw => descLower.includes(kw)) && 
+        !femaleKeywords.some(kw => descLower.includes(kw))) {
+      return 'male';
+    }
+
+    // Anything else → neutral
+    return 'other';
+  }
+
+  // Auto-classify every card once on load
+  cards.forEach(card => {
+    const titleLower = card.dataset.title;
+    const descLower  = card.dataset.description || '';
+    card.dataset.gender = detectGender(titleLower, descLower);
+  });
+
+  // Combined filter function
+  function updateVisibility() {
+    const searchText = searchInput.value.toLowerCase().trim();
+
+    cards.forEach(card => {
+      const title = card.dataset.title;
+      const desc  = card.dataset.description || '';
+      const text  = title + ' ' + desc;
+
+      const matchesSearch = !searchText || text.includes(searchText);
+      const matchesGender = currentGenderFilter === 'all' || 
+                           card.dataset.gender === currentGenderFilter;
+
+      card.style.display = matchesSearch && matchesGender ? '' : 'none';
+    });
+  }
+
+  // Gender buttons
+  genderButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      genderButtons.forEach(b => b.classList.remove('active', 'bg-indigo-700', 'hover:bg-indigo-600'));
+      btn.classList.add('active', 'bg-indigo-700', 'hover:bg-indigo-600');
+      currentGenderFilter = btn.dataset.filter;
+      updateVisibility();
+    });
+  });
+
+  // Live search
+  searchInput.addEventListener('input', updateVisibility);
+
+  // Video popup logic
+  const modal    = document.getElementById('modal');
+  const player   = document.getElementById('player');
+  const source   = document.getElementById('source');
+  const titleEl  = document.getElementById('modaltitle');
+  const closeBtn = document.getElementById('close');
+
+  cards.forEach(card => {
+    card.addEventListener('click', () => {
+      source.src = card.dataset.videoUrl;
+      titleEl.textContent = card.dataset.fullTitle;
+      player.load();
+      modal.style.display = 'flex';
+    });
+  });
+
+  closeBtn.addEventListener('click', closePopup);
+  modal.addEventListener('click', e => {
+    if (e.target === modal) closePopup();
+  });
+
+  function closePopup() {
+    modal.style.display = 'none';
+    player.pause();
+    player.currentTime = 0;
+    source.src = '';
+  }
+
+  // Initial filter
+  updateVisibility();
+});
+</script>
+
+</body>
+</html>
