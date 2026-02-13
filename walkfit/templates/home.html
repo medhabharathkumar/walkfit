@@ -26,8 +26,11 @@
           <a href="/listvideo/" class="hover:text-indigo-400 transition">PlayFit</a>
           <a href="/fitness_tracker/" class="hover:text-indigo-400 transition">Track</a>
           <a href="/feedback/" class="hover:text-indigo-400 transition">Feedback</a>
-          <a href="#science" class="hover:text-indigo-400 transition">Science Behind</a>
-          <a href="#journey" class="hover:text-indigo-400 transition">Your Journey</a>
+          <a href="#science" class="hover:text-indigo-400 transition">Science </a>
+          <a href="#journey" class="hover:text-indigo-400 transition">Journey</a>
+          <a href="/healthchart/" class="hover:text-indigo-400 flex items-center gap-2">
+  <i class="fas fa-weight-scale"></i> HealthChart
+</a>
           <a href="{% url 'manage_reminder' %}" class="hover:text-indigo-400 transition flex items-center gap-1">
             <i class="fas fa-bell"></i> Reminders
           </a>
@@ -59,6 +62,10 @@
         <a href="{% url 'manage_reminder' %}" class="hover:text-indigo-400 flex items-center gap-2">
           <i class="fas fa-bell"></i> Reminders
         </a>
+  
+<a href="/healthchart/" class="hover:text-indigo-400 flex items-center gap-2">
+  <i class="fas fa-weight-scale"></i> Health Chart
+</a>
         <hr class="border-gray-700 my-2">
         <a href="/logout/" class="hover:text-indigo-400">Logout</a>
         <a href="/profile/" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl text-center">
@@ -292,13 +299,13 @@
   let alertedThisMinute = false;
 
   const messages = [
-    "Hey 💕 Time to drink some water! 🌊",
-    "Mini stretch or dance break! 💃",
-    "Healthy food moment 🍓🥑",
-    "Water + movement + good vibes 💖",
-    "Quick reminder: hydrate & move! 💧🏃‍♀️",
-    "Time for a healthy snack break! 🥗",
-    "You got this! Small step now = big win later 🌟"
+    "Hey Time to drink some water! ",
+    "Mini stretch or dance break! ",
+    "Healthy food moment ",
+    "Water + movement + good vibes ",
+    "Quick reminder: hydrate & move! ",
+    "Time for a healthy snack break! ",
+    "You got this! Small step now = big win later "
   ];
 
   fetch('/get_daily_reminder/', { credentials: 'same-origin' })
@@ -327,7 +334,7 @@
     if (currentMinute === targetMinute) {
       if (!alertedThisMinute) {
         const randomMsg = messages[Math.floor(Math.random() * messages.length)];
-        alert("Reminder 💕\n" + randomMsg);
+        alert("Reminder \n" + randomMsg);
         alertedThisMinute = true;
       }
     } else {
@@ -353,12 +360,12 @@
     position: fixed;
     bottom: 30px;
     right: 30px;
-    background: #ff9500;
-    color: #000;
+    background: #072f79;
+    color: #26349a;
     padding: 12px 20px;
     border-radius: 50px;
     font-weight: bold;
-    box-shadow: 0 6px 20px rgba(255,149,0,0.5);
+    box-shadow: 0 6px 20px rgba(19, 92, 135, 0.5);
     cursor: pointer;
     z-index: 1000;
     display: flex;
@@ -372,7 +379,7 @@
   }
   #floating-chat:hover {
     transform: scale(1.1);
-    box-shadow: 0 10px 30px rgba(255,149,0,0.7);
+    box-shadow: 0 10px 30px rgba(158, 176, 206, 0.7);
   }
 </style>
 </body>

@@ -301,10 +301,10 @@ def manage_reminder(request):
     context = {
         'reminder': reminder,
         'example_message': random.choice([
-            "Hey 💕 Time to drink some water! 🌊",
-            "Mini stretch or dance break! 💃",
-            "Healthy food moment 🍓🥑",
-            "Water + movement + good vibes 💖"
+            "Hey  Time to drink some water! ",
+            "Mini stretch or dance break! ",
+            "Healthy food moment ",
+            "Water + movement + good vibes "
         ])
     }
     return render(request, 'manage.html', context)
@@ -474,3 +474,75 @@ def feedback_delete(request, id):
         return redirect('feedback_list')
 
     return redirect('feedback_list')
+
+from django.shortcuts import render, redirect
+from .models import Register
+import json
+from datetime import datetime
+
+def healthchart(request):
+    # Get user_id from session (set during registration/login)
+    user_id = request.session.get('user_id')
+
+    profile = None
+    initial_weight = 70.0  # fallback value
+
+    if user_id:
+        try:
+            profile = Register.objects.get(id=user_id)
+            initial_weight = float(profile.weight)
+        except Register.DoesNotExist:
+            # User ID in session but no matching record → treat as guest
+            pass
+
+    # Session-based weight history per user
+    session_key = f'weight_history_{user_id}' if user_id else 'weight_history_guest'
+
+    if session_key not in request.session:
+        current_month = datetime.now().strftime("%Y-%m")
+        request.session[session_key] = [
+            {"month": current_month, "weight": initial_weight}
+        ]
+        request.session.modified = True
+
+    history = request.session[session_key]
+
+    context = {
+        'initial_weight': initial_weight,
+        'history_json': json.dumps(history),
+        'current_month': datetime.now().strftime("%Y-%m"),
+        'has_profile': bool(profile),
+        'username': profile.name if profile else "Guest",
+    }
+
+    if request.method == 'POST':
+        new_weight_str = request.POST.get('weight')
+        new_month     = request.POST.get('month')   # YYYY-MM
+
+        if new_weight_str and new_month:
+            try:
+                new_weight = float(new_weight_str)
+
+                updated = False
+                for entry in history:
+                    if entry['month'] == new_month:
+                        entry['weight'] = new_weight
+                        updated = True
+                        break
+
+                if not updated:
+                    history.append({"month": new_month, "weight": new_weight})
+
+                # Keep sorted by month
+                history.sort(key=lambda x: x['month'])
+
+                request.session[session_key] = history
+                request.session.modified = True
+
+                return redirect('healthchart')
+
+            except ValueError:
+                # Invalid weight → ignore or show message (you can add messages framework)
+                pass
+
+    return render(request, 'healthchart.html', context)

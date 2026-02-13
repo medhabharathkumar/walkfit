@@ -10,7 +10,6 @@
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-
 <style>
 :root {
   --bg: #0b1220;
@@ -102,6 +101,104 @@ button {
   color: var(--muted);
   text-align: center;
 }
+
+/* ────────────────────────────────────────────────
+   STREAK SECTION STYLES
+───────────────────────────────────────────────── */
+.streak-section {
+  margin: 24px 0 16px;
+  background: var(--card);
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(34, 197, 94, 0.15);
+  transition: all 0.3s;
+}
+
+.streak-section.active {
+  border-color: var(--primary);
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.25);
+}
+
+.streak-flame-container {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 8px;
+}
+
+.streak-flame {
+  font-size: 48px;
+  color: #f97316;
+  animation: flame-flicker 2.5s infinite ease-in-out;
+  z-index: 2;
+  position: relative;
+}
+
+.streak-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 80px;
+  height: 80px;
+  background: radial-gradient(circle, rgba(249,115,22,0.6) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  opacity: 0.6;
+  z-index: 1;
+  animation: glow-pulse 3s infinite ease-in-out;
+}
+
+.streak-count {
+  font-size: 42px;
+  font-weight: 800;
+  color: #fbbf24;
+  line-height: 1;
+  margin-bottom: 4px;
+  text-shadow: 0 2px 10px rgba(251,191,36,0.4);
+}
+
+.streak-label {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.streak-message {
+  font-size: 13px;
+  color: #94a3b8;
+  min-height: 20px;
+}
+
+.streak-section.active .streak-message {
+  color: var(--primary);
+  font-weight: 500;
+}
+
+/* Animations */
+@keyframes flame-flicker {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25%      { transform: scale(1.08) rotate(2deg); }
+  50%      { transform: scale(0.95) rotate(-1deg); }
+  75%      { transform: scale(1.05) rotate(1deg); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+  50%      { opacity: 0.85; transform: translate(-50%, -50%) scale(1.15); }
+}
+
+@keyframes pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.4); }
+  70%  { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+
+.streak-count.pop {
+  animation: pop 0.6s ease-out;
+}
 </style>
 </head>
 <body>
@@ -160,6 +257,21 @@ button {
     </div>
   </div>
 
+  <!-- Streak Section -->
+  <div class="streak-section" id="streakCard">
+    <div class="streak-flame-container">
+      <i class="fas fa-fire streak-flame" id="flame"></i>
+      <div class="streak-glow" id="glow"></div>
+    </div>
+    
+    <div class="streak-info">
+      <div class="streak-count" id="streakCount">0</div>
+      <div class="streak-label">Day Streak</div>
+    </div>
+    
+    <div class="streak-message" id="streakMessage">Start moving today!</div>
+  </div>
+
   <div class="footer">
     Estimates from sensors • Saved periodically
   </div>
@@ -176,14 +288,20 @@ let tracking = false;
 let lastStepTime = 0;
 let currentSpeed = 0;
 
+// Streak variables
+let currentStreak = 0;
+let lastActiveDate = null;
+
 window.onload = () => {
   const saved = localStorage.getItem('fitTrackData');
   if (saved) {
     const d = JSON.parse(saved);
     totalDistance = d.distance || 0;
     totalSteps = d.steps || 0;
-    updateDisplay();
   }
+
+  updateDisplay();
+  updateStreak();
 };
 
 function getCsrfToken() {
@@ -212,8 +330,8 @@ function stopTracking() {
   tracking = false;
   clearInterval(timerInterval);
   if (autoSaveInterval) clearInterval(autoSaveInterval);
-  saveData();       // local
-  saveToServer();   // final server save
+  saveData();
+  saveToServer();
   document.querySelector('.btn-start').disabled = false;
   document.querySelector('.btn-stop').disabled = true;
 }
@@ -294,6 +412,8 @@ function updateDisplay() {
   document.getElementById("steps").textContent = totalSteps;
   const cal = Math.round((totalDistance / 1000) * 60 + totalSteps * 0.04);
   document.getElementById("calories").textContent = cal + " kcal";
+
+  updateStreak();
 }
 
 function saveData() {
@@ -328,14 +448,94 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+// ────────────────────────────────────────────────
+//   STREAK LOGIC
+// ────────────────────────────────────────────────
+function updateStreak() {
+  const today = new Date().toISOString().split('T')[0];
+
+  // Load saved streak
+  const saved = localStorage.getItem('fitTrackStreak');
+  if (saved) {
+    const data = JSON.parse(saved);
+    currentStreak = data.streak || 0;
+    lastActiveDate = data.lastDate || null;
+  }
+
+  let newStreak = currentStreak;
+
+  // If user has activity today
+  if (totalSteps > 0 || totalDistance > 0) {
+    if (lastActiveDate === null) {
+      newStreak = 1;
+    } else if (lastActiveDate === today) {
+      newStreak = currentStreak;
+    } else {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yestStr = yesterday.toISOString().split('T')[0];
+
+      if (lastActiveDate === yestStr) {
+        newStreak = currentStreak + 1;
+      } else {
+        newStreak = 1;
+      }
+    }
+
+    // Save if changed
+    if (newStreak !== currentStreak || lastActiveDate !== today) {
+      currentStreak = newStreak;
+      lastActiveDate = today;
+      localStorage.setItem('fitTrackStreak', JSON.stringify({
+        streak: currentStreak,
+        lastDate: today
+      }));
+
+      // Pop animation
+      const countEl = document.getElementById("streakCount");
+      countEl.classList.remove("pop");
+      void countEl.offsetWidth;
+      countEl.classList.add("pop");
+    }
+  }
+
+  // Update UI
+  const countEl = document.getElementById("streakCount");
+  const msgEl   = document.getElementById("streakMessage");
+  const card    = document.getElementById("streakCard");
+
+  countEl.textContent = currentStreak;
+
+  if (currentStreak >= 1) {
+    card.classList.add("active");
+    if (currentStreak === 1) {
+      msgEl.textContent = "Great start! Keep going!";
+    } else if (currentStreak <= 3) {
+      msgEl.textContent = `Nice! ${currentStreak} days strong!`;
+    } else {
+      msgEl.textContent = `You're on fire! ${currentStreak} day streak! 🔥`;
+    }
+  } else {
+    card.classList.remove("active");
+    msgEl.textContent = "Start moving today!";
+  }
+}
+
 function resetTracking() {
   if (!confirm("Reset all data?")) return;
   if (tracking) stopTracking();
   lastPosition = null;
   totalDistance = totalSteps = currentSpeed = 0;
   localStorage.removeItem('fitTrackData');
+
+  // Also reset streak
+  currentStreak = 0;
+  lastActiveDate = null;
+  localStorage.removeItem('fitTrackStreak');
+
   document.getElementById("timer").textContent = "00:00:00";
   updateDisplay();
+  updateStreak();
 }
 </script>
 </body>

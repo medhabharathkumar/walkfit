@@ -25,5 +25,6 @@ urlpatterns=[
     path('feedback/', views.feedback, name='feedback'),
     path('feedback_list/', views.feedback_list, name='feedback_list'),
     path('feedback_delete/<int:id>/', views.feedback_delete, name='feedback_delete'),
+    path('healthchart/',views.healthchart,name='healthchart'),
 
 ]
